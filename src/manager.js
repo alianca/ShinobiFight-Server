@@ -2,8 +2,6 @@ var controllers = require('./controllers').controllers;
 var fs = require('fs');
 var config = require('../config').config;
 
-var controllers = controllers;
-
 exports.handleRequest = function(req, res) {
     var controller = null;
 
@@ -25,7 +23,7 @@ exports.handleRequest = function(req, res) {
             }
         });
     } else {
-        controller = this.controllers[req.url.match(/^\/([a-z_]+)\/.*/i)[1]];
+        controller = controllers[req.url.match(/^\/([a-z_]+)\/.*/i)[1]];
         var response = '';
         if (controller) {
             var req_controller = new controller();

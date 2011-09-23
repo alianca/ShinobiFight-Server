@@ -2,24 +2,20 @@ var controller = require('../helpers/controller');
 var sessions = require('../helpers/session_manager');
 var crypto = require('crypto');
 var models = require('../models').models;
+var handle_errors = require('../helpers/error_handler').handle;
 var Player = models.Player;
 
 exports.AuthenticationController = controller.createController('authentication', {
-    GET: {
+    POST: {
         login: function(request, params, respond) {
             var credentials = decrypt(params.credentials).split(':');
             Player.find({ name: credentials[0] }, function(err, docs) {
-                if (err) {
-                    respond({ status: 'error', reason: 'invalid_login' });
-                } else {
-                    var player = docs[0];
-                    if (player && player.validate_password(credentials[1])) {
-                        sessions.create(player);
-                        respond({ status: 'ok', response: player._id });
-                    } else {
-                        respond({ status: 'error', reason: 'invalid_login' });
-                    }
-                }
+                if (err) return handle_errors(err.errors, respond);
+                var player = docs[0];
+                if (!player || !player.validate_password(credentials[1]))
+                    return handle_errors(['invalid_login'], respond);
+                sessions.create(player);
+                respond({ status: 'ok', response: player._id });
             });
         },
 
@@ -41,8 +37,7 @@ function decrypt(data) {
 
 function hex_to_byte(str) {
     var buffer = new Buffer(str.length / 2);
-    for (var i = 0; i < str.length; i += 2) {
+    for (var i = 0; i < str.length; i += 2)
         buffer[i / 2] = eval('0x' + str.substr(i, 2));
-    }
     return buffer.toString('binary');
 }
