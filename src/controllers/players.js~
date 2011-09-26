@@ -1,0 +1,35 @@
+var controller = require('../helpers/controller')
+var sessions = require('../helpers/session_manager')
+
+exports.controller = { root: 'players', actions: {
+    player_data: function(params, respond) {
+        var player = sessions.get(params.id)
+        if (!player) return respond({ status: 'error', reason: 'invalid_player' })
+        var data = {
+            name: player.name,
+            clan: player.clan,
+            level: player.get_level(),
+            experience: player.experience,
+            attributes: player.get_attributes()
+        }
+        player.get_skills(function(skills) {
+            data.skills = skills
+            respond({ status: 'ok', response: data })
+        })
+    }
+
+    create: function(params, respond) {
+        var p = new Player(params.player)
+        p.save(function(err) {
+            if (err) return respond({ status: 'error', reason: err.errors })
+            respond({ status: 'ok', response: p })
+        })
+    },
+
+    set_clan: function(params, respond) {
+        console.log(params.player_id)
+        var player = sessions.get(params.player_id)
+        if (player) player.clan = params.clan_id
+        respond({ status: 'ok', response: {} })
+    }
+}

@@ -1,14 +1,9 @@
 var controllers = [
-    require('./players_controller').PlayersController,
-    require('./battles_controller').BattlesController,
-    require('./authentication_controller').AuthenticationController,
-    require('./clans_controller').ClansController
-];
+    'players',
+    'battles',
+    'authentication',
+    'clans'
+]
 
-var index = {};
-
-for (var i = 0; i < controllers.length; i++) {
-    index[controllers[i].root] = controllers[i];
-}
-
-exports.controllers = index;
+for (i in controllers) 
+    exports[controllers[i]] = require('./' + controllers[i]).controller

@@ -1,11 +1,11 @@
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
-var ObjectId = Schema.ObjectId;
+var mongoose = require('mongoose')
+var Schema = mongoose.Schema
+var ObjectId = Schema.ObjectId
 
-exports.Clan = mongoose.model('clan', new Schema({
+var ClanSchema = new Schema({
     name: { type: String, unique: true },
     skills: [ObjectId],
-    attrs: {
+    attributes: {
         hp: { type: String, enum: [ 'low', 'medium', 'high' ] },
         nin: { type: String, enum: [ 'low', 'medium', 'high' ] },
         gen: { type: String, enum: [ 'low', 'medium', 'high' ] },
@@ -19,4 +19,6 @@ exports.Clan = mongoose.model('clan', new Schema({
         chk: { type: String, enum: [ 'low', 'medium', 'high' ] },
         stm: { type: String, enum: [ 'low', 'medium', 'high' ] }
     }
-}));
+})
+
+mongoose.model('clan', ClanSchema)

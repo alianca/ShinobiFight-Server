@@ -1,5 +1,7 @@
-exports.models = {
-    Clan: require('./clan').Clan,
-    Skill: require('./skill').Skill,
-    Player: require('./player').Player
-};
+var models = [ 
+    'clan',
+    'skill',
+    'player'
+]
+
+for (i in models) require('./' + models[i])
