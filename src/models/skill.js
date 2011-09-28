@@ -34,14 +34,14 @@ var SkillSchema = new Schema({
 
 SkillSchema.method('get_damage', function(attacker, attacked) {
     if (this.blocked) return null;
-
+    
     var damage = (attacker.status[this.type] + attacker.status.str / 3) * this.strength
     var defense = (attacked.status.def + attacked.status[this.type]) / 2
     var success_chance = (this.precision + attacker.precision + attacker.status[this.type]) / 3 - attacked.dodge
     var critical_chance = (this.critical + attacker.critical / 3) * attacker.status[this.type]
     var success = success_chance > Math.random() * 100
     var critical = critical_chance > Math.random() * 100
-
+    
     var final_damage = 0
     if (success) {
         final_damage = damage - defense
@@ -54,10 +54,10 @@ SkillSchema.method('get_damage', function(attacker, attacked) {
             attacked.status.hp = 0
         }
     }
-
+    
     this.blocked = true
     setTimeout(function() { this.blocked = false }, this.fatigue * 1000)
-
+    
     return { damage: final_damage, success: success, critical: critical }
 })
 

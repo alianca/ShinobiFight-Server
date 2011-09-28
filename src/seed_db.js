@@ -1,18 +1,19 @@
-var config = require('../config').config;
-var models = require('./models').models;
-var ObjectId = require('mongoose').Schema.ObjectId;
+var config = require('../config').config
+var models = require('./models')
+var mongoose = require('mongoose')
+var ObjectId = mongoose.Schema.ObjectId
 
-var Clan = models.Clan;
-var Skill = models.Skill;
+mongoose.connect('mongodb://' + config.db.address + ':' + config.db.port + '/shinobi')
 
-config();
+var Clan = mongoose.model('clan')
+var Skill = mongoose.model('skill')
 
 function seed_clan() {
     return {
         senju: new Clan({
             name: 'Senju',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'low',
                 nin: 'high',
                 gen: 'low',
@@ -31,7 +32,7 @@ function seed_clan() {
         aburame: new Clan({
             name: 'Aburame',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'medium',
                 nin: 'medium',
                 gen: 'low',
@@ -50,7 +51,7 @@ function seed_clan() {
         akimichi: new Clan({
             name: 'Akimichi',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'medium',
                 nin: 'low',
                 gen: 'low',
@@ -69,7 +70,7 @@ function seed_clan() {
         hyuuga: new Clan({
             name: 'Hyuuga',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'low',
                 nin: 'medium',
                 gen: 'low',
@@ -88,7 +89,7 @@ function seed_clan() {
         inuzuka: new Clan({
             name: 'Inuzuka',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'high',
                 nin: 'medium',
                 gen: 'low',
@@ -107,7 +108,7 @@ function seed_clan() {
         nara: new Clan({
             name: 'Nara',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'low',
                 nin: 'medium',
                 gen: 'medium',
@@ -126,7 +127,7 @@ function seed_clan() {
         uzumaki: new Clan({
             name: 'Uzumaki',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'high',
                 nin: 'medium',
                 gen: 'low',
@@ -145,7 +146,7 @@ function seed_clan() {
         yamanaka: new Clan({
             name: 'Yamaaka',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'low',
                 nin: 'medium',
                 gen: 'high',
@@ -164,7 +165,7 @@ function seed_clan() {
         suna: new Clan({
             name: 'Suna',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'high',
                 nin: 'medium',
                 gen: 'low',
@@ -183,7 +184,7 @@ function seed_clan() {
         kaguya: new Clan({
             name: 'Kaguya',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'medium',
                 nin: 'medium',
                 gen: 'low',
@@ -202,7 +203,7 @@ function seed_clan() {
         yuki: new Clan({
             name: 'Yuki',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'low',
                 nin: 'high',
                 gen: 'low',
@@ -221,7 +222,7 @@ function seed_clan() {
         uchiha: new Clan({
             name: 'Uchiha',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'low',
                 nin: 'high',
                 gen: 'medium',
@@ -240,7 +241,7 @@ function seed_clan() {
         futagokura: new Clan({
             name: 'Futagokura',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'high',
                 nin: 'medium',
                 gen: 'low',
@@ -259,7 +260,7 @@ function seed_clan() {
         hoozuki: new Clan({
             name: 'Hoozuki',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'low',
                 nin: 'high',
                 gen: 'low',
@@ -278,7 +279,7 @@ function seed_clan() {
         hoshigaki: new Clan({
             name: 'Hoshigaki', // TODO
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'low',
                 nin: 'low',
                 gen: 'low',
@@ -297,7 +298,7 @@ function seed_clan() {
         bakudankura: new Clan({
             name: 'Bakudankura',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'medium',
                 nin: 'high',
                 gen: 'low',
@@ -316,7 +317,7 @@ function seed_clan() {
         kumokura: new Clan({
             name: 'Kumokura',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'low',
                 nin: 'high',
                 gen: 'low',
@@ -335,7 +336,7 @@ function seed_clan() {
         juinkura: new Clan({
             name: 'Juinkura', // TODO
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'low',
                 nin: 'low',
                 gen: 'low',
@@ -354,7 +355,7 @@ function seed_clan() {
         no_clan: new Clan({
             name: 'Sem Cla',
             skills: [],
-            attrs: {
+            attributes: {
                 hp : 'medium',
                 nin: 'low',
                 gen: 'low',
@@ -369,7 +370,7 @@ function seed_clan() {
                 stm: 'high'
             }
         })
-    };
+    }
 }
 
 function seed_skill() {
@@ -1935,34 +1936,34 @@ function seed_skill() {
                 damage: { hp : 0, nin: 0, gen: 0, tai: 0, agi: 0, con: 0, str: 0, def: 0, cog: 0, intel: 0, chk: 0, stm: 0 }
             })
         ]
-    };
+    }
 }
 
-var clans = seed_clan();
-var skills = seed_skill();
+var clans = seed_clan()
+var skills = seed_skill()
 
 for (var key in skills) {
     for (var i = 0; i < skills[key].length; i++) {
         skills[key][i].save(function(err) {
             if (err) {
-                console.log('-Skill- ' + key + ' ---');
-                console.log("ERROR: " + err);
+                console.log('-Skill- ' + key + ' ---')
+                console.log("ERROR: " + err)
             }
-        });
+        })
     }
 }
 
 for (var key in clans) {
-    var clan_skills = skills.basic.concat(skills[key]);
+    var clan_skills = skills.basic.concat(skills[key])
 
     for (var i = 0; i < clan_skills.length; i++) {
-        clans[key].skills.push(clan_skills[i]._id);
+        clans[key].skills.push(clan_skills[i]._id)
     }
 
     clans[key].save(function(err) {
         if (err) {
-            console.log('-Clan- ' + key + ' ---');
-            console.log('ERROR: ' + err);
+            console.log('-Clan- ' + key + ' ---')
+            console.log('ERROR: ' + err)
         }
-    });
+    })
 }

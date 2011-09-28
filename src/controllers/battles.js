@@ -70,6 +70,6 @@ function search_match(min_level, max_level, level) {
 
 function matches(candidate, min_level, max_level, level) {
     return candidate.status == 'waiting' &&
-           candidate.player.level >= min_level && candidate.player.level <= max_level &&
-           candidate.min_level <= level && candidate.max_level >= level
+        candidate.player.level >= min_level && candidate.player.level <= max_level &&
+        candidate.min_level <= level && candidate.max_level >= level
 }

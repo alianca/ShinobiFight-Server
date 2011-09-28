@@ -6,21 +6,24 @@ var config = require('../config').config
 
 exports.handle_request = function(req, res) {
     console.log('[Request]: ' + req.method + ' - ' + req.url)
-    if (/^\/\w+\/\w+$/.test(req.url)) {
-        var url = req.url.split('/')
+    if (/^(\/\w+)+\.\w+(\??.*)$/.test(req.url)) {
+        fs.readFile(config.public_dir + req.url, function(err, data) {
+            console.log("   [Type] File")
+            res.writeHead(data ? 200 : 404, {
+                'Content-Type': 'text/plain',
+                'Content-Length': data ? data.length : 10
+            })
+            res.end(data || 'Not found')
+        })
+    }
+    else if (/^\/\w+\/\w+(\??.*)$/.test(req.url)) {
+        var url = req.url.split('?')[0].split('/')
         var controller = controllers[url[1]]
         if (!controller) return json_response(res, { status: 'error', reason: 'invalid_controller' })
         var action = controller[url[2]]
         if (!action) return json_response(res, { status: 'error', reason: 'invalid_action' })
         call(req, action, function(data) { json_response(res, data) })
     }
-    else fs.readFile(config.public_dir + req.url, function(err, data) {
-        res.writeHead(data ? 200 : 404, {
-            'Content-Type': 'text/plain',
-            'Content-Length': data ? data.length : 10
-        })
-        res.end(data || 'Not found')
-    })
 }
 
 function json_response(res, response) {
@@ -36,5 +39,9 @@ function call(req, action, callback) {
         req.on('data', function(chunk) { data += chunk })
         req.on('end', function() { action(JSON.parse(data), callback) })
     }
-    else action(qs.parse(req.url.split('?'), '&', '='), callback)
+    else {
+        var args = req.url.split('?')[1]
+        var params = args ? qs.parse(args, '&', '=') : {}
+        action(params, callback)
+    }
 }

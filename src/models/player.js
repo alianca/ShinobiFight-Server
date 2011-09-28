@@ -11,8 +11,15 @@ var EXP_RATE = 200
 
 var PlayerSchema = new Schema({
     name: { type: String, required: true },
-    user: { type: String, required: true, unique: true },
-    password: { type: String, required: true, set: encrypt },
+    gender: { type: String, set: set_gender, required: true },
+    birth: { type: String, required: true },
+    phone: { type: String },
+    accept_newsletter: Boolean,
+    accept_sms: Boolean,
+    accept_terms: { type: Boolean, required: true },
+    user: { type: String, unique: true, required: true },
+    email: { type: String, unique: true, required: true },
+    password: { type: String, set: encrypt_password, required: true },
     experience: { type: Number, default: 0 }
 })
 
@@ -64,9 +71,11 @@ PlayerSchema.method('reset_status', function() {
 
 PlayerSchema.method('get_skills', function(callback) {
     if (this.clan) 
-        Skill.where('_id').in(this.clan.skills).where('min_level').lte(this.level).find(function(err, skills) {
-            if (err) callback(null)
-            else callback(skills)
+        Skill
+        .where('_id').in(this.clan.skills)
+        .where('min_level').lte(this.level)
+        .find(function(err, skills) {
+            callback(err ? null : skills)
         })
     else callback(null)
 })
@@ -83,8 +92,53 @@ PlayerSchema.method('test_password', function(password) {
     return this.password == encrypt(password)
 })
 
-function encrypt(data) {
-    return crypto.createHash('sha512').update(data).digest('hex')
-}
+PlayerSchema.method('set_victory', function(opponent) {
+    var old_level = this.level
+    var diff = opponent.level - old_level
+    if (diff < 0) diff = -1.0 / diff
+    this.experience += EXP_RATE + diff * EXP_FACTOR * 0.2
+    this.save()
+    return this.level > old_level
+})
+
+// Validations
+
+PlayerSchema.path('email').validate(function(value) {
+    return (/^\w+@\w+\.\w+$/).test(value)
+})
+
+PlayerSchema.path('birth').validate(function(value) {
+    return (/^\d{2}\/\d{2}\/\d{4}$/).test(value)
+})
+
+PlayerSchema.path('user').validate(function(value) {
+    return (/^[\w-]{5,15}$/).test(value)
+})
+
+PlayerSchema.path('phone').validate(function(value) {
+    if (value == '') return true
+    return (/^\((10)|([1-9][1-9])\)[6-9][0-9]{7}$/).test(value)    
+})
+
+PlayerSchema.path('gender').validate(function(value) {
+    return value
+})
+
+PlayerSchema.path('accept_terms').validate(function(value) {
+    return value
+})
 
 mongoose.model('player', PlayerSchema)
+
+function encrypt_password(data) {
+    if (data.length >= 4)
+        return crypto.createHash('sha512').update(data).digest('hex')
+    else
+        return null
+}
+
+function set_gender(value) {
+    if (/m(asculino)?/i.test(value)) return 'M'
+    else if (/f(eminino)?/i.test(value)) return 'F'
+    else return null
+}

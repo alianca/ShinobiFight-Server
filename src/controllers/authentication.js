@@ -6,9 +6,9 @@ var Player = mongoose.model('player')
 
 exports.controller = {
     login: function(params, respond) {
-        var credentials = decrypt(params.credentials).split(':')
-        Player.findOne({ name: credentials[0] }, function(err, player) {
-            if (!player || !player.test_password(credentials[1]))
+        var cred = decrypt(params.credentials).split(':')
+        Player.findOne({ $or: [{ email: cred[0] }, { user : cred[0] }] }, function(err, player) {
+            if (!player || !player.test_password(cred[1]))
                 return respond({ status: 'error', reason: 'invalid_login' })
             sessions.create(player)
             respond({ status: 'ok', response: player._id })

@@ -5,14 +5,15 @@ var Player = mongoose.model('player')
 
 exports.controller = {
     player_data: function(params, respond) {
-        var player = sessions.get(params.id)
+        console.log(params)
+        var player = sessions.get(params.player_id)
         if (!player) return respond({ status: 'error', reason: 'invalid_player' })
         var data = {
             name: player.name,
             clan: player.clan,
             level: player.level,
             experience: player.experience,
-            attributes: player.get_attributes()
+            attributes: player.attributes
         }
         player.get_skills(function(skills) {
             data.skills = skills
