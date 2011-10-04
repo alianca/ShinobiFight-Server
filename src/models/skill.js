@@ -35,19 +35,21 @@ var SkillSchema = new Schema({
 SkillSchema.method('get_damage', function(attacker, attacked) {
     if (this.blocked) return null;
     
-    var damage = (attacker.status[this.type] + attacker.status.str / 3) * this.strength
-    var defense = (attacked.status.def + attacked.status[this.type]) / 2
-    var success_chance = (this.precision + attacker.precision + attacker.status[this.type]) / 3 - attacked.dodge
-    var critical_chance = (this.critical + attacker.critical / 3) * attacker.status[this.type]
+    var damage = (attacker.bonus[this.type] + attacker.bonus.str / 3) * this.strength
+    var defense = (attacked.bonus.def + attacked.bonus[this.type]) / 2
+    var success_chance = (this.precision + attacker.precision + attacker.bonus[this.type]) / 3 - attacked.dodge
+    var critical_chance = (this.critical + attacker.critical / 3) * attacker.bonus[this.type]
     var success = success_chance > Math.random() * 100
     var critical = critical_chance > Math.random() * 100
     
     var final_damage = 0
     if (success) {
+        this.set_effects(attacker, attacked)
+        
         final_damage = damage - defense
         if (final_damage < 0) final_damage = 0
         if (critical) final_damage *= 2
-
+        
         attacked.status.hp -= final_damage
         if (attacked.status.hp < 0) {
             final_damage -= attacked.status.hp
@@ -59,6 +61,20 @@ SkillSchema.method('get_damage', function(attacker, attacked) {
     setTimeout(function() { this.blocked = false }, this.fatigue * 1000)
     
     return { damage: final_damage, success: success, critical: critical }
+})
+
+SkillSchema.method('set_effects', function(attacker, attacked) {
+    attacker.status.effects.push({
+        duration: this.duration,
+        bonus: this.bonus
+    })
+    
+    for (var type in this.cost) attacker.status[type] -= cost
+    
+    attacked.status.effects.push({
+        duration: this.duration,
+        damage: this.damage
+    })
 })
 
 mongoose.model('skill', SkillSchema)

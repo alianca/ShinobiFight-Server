@@ -12,8 +12,8 @@ exports.controller = {
         var min_level = Math.max(params.min_level, level - 5)
         var max_level = Math.min(params.max_level, level + 5)
         var match = search_match(min_level, max_level, level)
-        var response = match ? { 
-            status: 'started', 
+        var response = match ? {
+            status: 'started',
             battle: battles.create(match.player, player)
         } : {
             status: 'waiting',
@@ -34,7 +34,7 @@ exports.controller = {
         if (entry.status == 'started') delete queue[params.id]
         respond({ status: 'ok', response: entry })
     },
-
+    
     cancel: function(params, respond) {
         if (queue[params.player_id]) delete queue[params.player_id]
         respond({ status: 'ok', response: {} })
@@ -52,8 +52,18 @@ exports.controller = {
         
         attacker.get_skill(params.skill_id, function(skill) {
             if (!skill) return respond({ status: 'error', reason: 'invalid_skill' })
+            
             var results = skill.get_damage(attacker, attacked)
             if (!results) return respond({ status: 'error', reason: 'cooldown' })
+            
+            for (var i in attacker.status.effects)
+                if (--attacker.status.effects[i].duration <= 0)
+                    attacker.status.effects.splice(i, 1)
+            
+            for (var i in attacked.status.effects)
+                if (--attacked.status.effects[i].duration <= 0)
+                    attacked.status.effects.splice(i, 1)
+            
             if (attacked.status.hp == 0) battle.winner = attacker._id
             battle.turn = attacked._id
             respond({ status: 'ok', response: results })

@@ -24,7 +24,7 @@ exports.controller = {
     create: function(params, respond) {
         var player = new Player(params.player)
         player.save(function(err) {
-            if (err) respond({ status: 'error', reason: err.errors })
+            if (err) respond({ status: 'error', reason: 'already_exists' })
             else respond({ status: 'ok', response: player })
         })
     },

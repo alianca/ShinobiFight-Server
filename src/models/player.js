@@ -11,9 +11,9 @@ var EXP_RATE = 200
 
 var PlayerSchema = new Schema({
     name: { type: String, required: true },
-    gender: { type: String, set: set_gender, required: true },
+    gender: { type: String, required: true },
     birth: { type: String, required: true },
-    phone: { type: String },
+    phone: { type: String, required: false },
     accept_newsletter: Boolean,
     accept_sms: Boolean,
     accept_terms: { type: Boolean, required: true },
@@ -50,7 +50,21 @@ PlayerSchema.virtual('clan').set(function(clan_id) {
 })
 
 PlayerSchema.virtual('status').get(function() {
-    return this._status
+    return this._status || this.attributes
+})
+
+PlayerSchema.virtual('bonus').get(function() {
+    var status = clone(this.status)
+    status.effects.forEach(function(effect) {
+        ['bonus', 'damage'].forEach(function(type) {
+            for (var attribute in effect[type]) {
+                var value = effect[type][attribute]
+                if (!is_integer(value)) value *= status[attribute]
+                status[attribute] += value
+            }
+        })
+    })
+    return status
 })
 
 PlayerSchema.virtual('precision').get(function() {
@@ -67,6 +81,7 @@ PlayerSchema.virtual('critical').get(function() {
 
 PlayerSchema.method('reset_status', function() {
     this._status = this.attributes
+    this._status.effects = []
 })
 
 PlayerSchema.method('get_skills', function(callback) {
@@ -117,11 +132,11 @@ PlayerSchema.path('user').validate(function(value) {
 
 PlayerSchema.path('phone').validate(function(value) {
     if (value == '') return true
-    return (/^\((10)|([1-9][1-9])\)[6-9][0-9]{7}$/).test(value)    
+    return (/^\((10)|([1-9][1-9])\)[6-9][0-9]{7}$/).test(value)
 })
 
 PlayerSchema.path('gender').validate(function(value) {
-    return value
+    return (/^[MF]$/).test(value)
 })
 
 PlayerSchema.path('accept_terms').validate(function(value) {
@@ -131,14 +146,19 @@ PlayerSchema.path('accept_terms').validate(function(value) {
 mongoose.model('player', PlayerSchema)
 
 function encrypt_password(data) {
-    if (data.length >= 4)
-        return crypto.createHash('sha512').update(data).digest('hex')
-    else
-        return null
+    if (data.length < 4) return null
+    return crypto.createHash('sha512').update(data).digest('hex')
 }
 
-function set_gender(value) {
-    if (/m(asculino)?/i.test(value)) return 'M'
-    else if (/f(eminino)?/i.test(value)) return 'F'
-    else return null
+function clone(object) {
+    var new_object = object instanceof Array ? [] : {}
+    for (var i in object)
+        if (object[i] && typeof object[i] == 'object')
+            new_object[i] = clone(object[i])
+        else new_object[i] = object[i]
+    return new_object
+}
+
+function is_integer(num) {
+    return (num == parseInt(num) && !isNaN(num))
 }
