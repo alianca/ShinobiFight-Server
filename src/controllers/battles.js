@@ -1,5 +1,5 @@
-var sessions = require('../helpers/session_manager')
-var battles = require('../helpers/battle_manager')
+var sessions = require('../dynamic/session_manager')
+var battles = require('../dynamic/battle_manager')
 
 var queue = {}
 
@@ -8,13 +8,12 @@ exports.controller = {
         var player = sessions.get(params.player_id)
         if (!player) return respond({ status: 'error', reason: 'invalid_player' })
         
-        var level = player.get_level()
-        var min_level = Math.max(params.min_level, level - 5)
-        var max_level = Math.min(params.max_level, level + 5)
-        var match = search_match(min_level, max_level, level)
+        var min_level = Math.max(params.min_level, player.level - 5)
+        var max_level = Math.min(params.max_level, player.level + 5)
+        var match = search_match(min_level, max_level, player.level)
         var response = match ? {
             status: 'started',
-            battle: battles.create(match.player, player)
+            battle: battles.create([ match.player, player ])
         } : {
             status: 'waiting',
             player: player,
@@ -47,7 +46,7 @@ exports.controller = {
         
         if (!battle) var error = 'invalid_battle'
         else if (!attacker || !attacked) var error = 'invalid_players'
-        else if (attacker._id != battle.turn) var error = 'wrong_turn'
+        else if (!battle.validate_turn(attacker)) var error = 'wrong_turn'
         if (error) return respond({ status: 'error', reason: error })
         
         attacker.get_skill(params.skill_id, function(skill) {
@@ -56,16 +55,9 @@ exports.controller = {
             var results = skill.get_damage(attacker, attacked)
             if (!results) return respond({ status: 'error', reason: 'cooldown' })
             
-            for (var i in attacker.status.effects)
-                if (--attacker.status.effects[i].duration <= 0)
-                    attacker.status.effects.splice(i, 1)
+            if (attacked.status.hp == 0) battle.end(attacker)
+            else battle.end_turn()
             
-            for (var i in attacked.status.effects)
-                if (--attacked.status.effects[i].duration <= 0)
-                    attacked.status.effects.splice(i, 1)
-            
-            if (attacked.status.hp == 0) battle.winner = attacker._id
-            battle.turn = attacked._id
             respond({ status: 'ok', response: results })
         })
     }

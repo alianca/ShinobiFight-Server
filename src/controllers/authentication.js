@@ -1,4 +1,4 @@
-var sessions = require('../helpers/session_manager')
+var sessions = require('../dynamic/session_manager')
 var crypto = require('crypto')
 var mongoose = require('mongoose')
 

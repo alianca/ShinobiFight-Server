@@ -2,6 +2,7 @@ var controllers = [
     'players',
     'battles',
     'authentication',
+    'chat',
     'clans'
 ]
 
