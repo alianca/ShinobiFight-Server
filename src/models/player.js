@@ -3,10 +3,12 @@ var mongoose = require('mongoose')
 var Schema = mongoose.Schema
 var ObjectId = Schema.ObjectId
 
+var config = require('../../config')
+var base = config.base_values
+var exp_rate = config.exp_rate
+
 var Clan = mongoose.model('clan')
 var Skill = mongoose.model('skill')
-
-var EXP_RATE = 200
 
 var PlayerSchema = new Schema({
     name: { type: String, required: true },
@@ -23,7 +25,7 @@ var PlayerSchema = new Schema({
 })
 
 PlayerSchema.virtual('level').get(function() {
-    return Math.ceil((this.experience / EXP_RATE - 1) / 5) + 1
+    return Math.ceil((this.experience / exp_rate - 1) / 5) + 1
 })
 
 PlayerSchema.virtual('attributes').get(function() {
@@ -52,20 +54,6 @@ PlayerSchema.virtual('status').get(function() {
     return this._status || this.attributes
 })
 
-PlayerSchema.virtual('bonus').get(function() {
-    var status = clone(this.status)
-    status.effects.forEach(function(effect) {
-        ['bonus', 'damage'].forEach(function(type) {
-            for (var attribute in effect[type]) {
-                var value = effect[type][attribute]
-                if (!is_integer(value)) value *= status[attribute]
-                status[attribute] += value
-            }
-        })
-    })
-    return status
-})
-
 PlayerSchema.virtual('precision').get(function() {
     return (this.bonus.nin + this.bonus.con + this.bonus.str + this.bonus.chk) / 4
 })
@@ -83,9 +71,7 @@ PlayerSchema.virtual('messages').get(function() {
 })
 
 PlayerSchema.method('reset_status', function() {
-    this._status = this.attributes
-    this._status.effects = []
-    this._status.messages = []
+    this._status = new PlayerMetadata()
 })
 
 PlayerSchema.method('cleanup', function() {
@@ -116,7 +102,7 @@ PlayerSchema.method('test_password', function(password) {
 })
 
 PlayerSchema.method('exp_for_level', function(level) {
-    return ((level - 1) * 5 + 1) * EXP_RATE
+    return ((level - 1) * 5 + 1) * exp_rate
 })
 
 PlayerSchema.method('set_victory', function(opponent) {
@@ -125,8 +111,8 @@ PlayerSchema.method('set_victory', function(opponent) {
     
     // gains more experience for defeating higher levels
     var diff = opponent.level - this.level
-    var modifier = diff * EXP_FACTOR * 0.2
-    this.experience += EXP_RATE + modifier
+    var modifier = diff * exp_rate * 0.2
+    this.experience += exp_rate + modifier
     
     // returns true if leveled up
     return this.level > old_level
@@ -190,31 +176,12 @@ function encrypt_password(data) {
     return crypto.createHash('sha512').update(data).digest('hex')
 }
 
-function clone(object) {
-    var new_object = object instanceof Array ? [] : {}
-    for (var i in object)
-        if (object[i] && typeof object[i] == 'object')
-            new_object[i] = clone(object[i])
-        else new_object[i] = object[i]
-    return new_object
-}
-
 function is_integer(num) {
     return (num == parseInt(num) && !isNaN(num))
 }
 
 function attribute_convert(level, type, reference) {
-    var value = (type == 'hp'
-        ? [60, 70, 80, 90, 105, 115, 130, 145, 155, 170,
-           185, 200, 215, 230, 250, 265, 280, 300, 315, 335,
-           355, 375, 395, 415, 435, 455, 475, 495, 520, 540,
-           565, 590, 610, 635, 660, 685, 710, 735, 765, 790,
-           815, 845, 870, 900, 930, 960, 990, 1020, 1050, 1080]
-        : [12, 14, 16, 18, 21, 23, 26, 29, 31, 34,
-           37, 40, 43, 46, 50, 53, 56, 60, 63, 67,
-           71, 75, 79, 83, 87, 91, 95, 99, 104, 108,
-           113, 118, 122, 127, 132, 137, 142, 147, 153, 158,
-           163, 169, 174, 180, 186, 192, 198, 204, 210, 216]) [level]
+    var value = (type == 'hp' ? base.hp : base.attributes)[level]
     
     if (reference[0] == 'm') value += value * 0.25
     else if (reference[0] == 'h') value += value * 0.5
