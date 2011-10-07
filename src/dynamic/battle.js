@@ -3,24 +3,28 @@ var count = 0 // global so it never repeats
 function Battle(players) {
     this.id = count++
     this.turn = 0
-    this.turn_duration = 12 // seconds
     this.winner = null
     this.players = players
+    this.round_progress = 0
 }
 
 Battle.prototype.start = function() {
-    players.forEach(function(p) { p.reset_status() })
-    this.reset_timer()
+    players.forEach(function(p) { p.reset() })
 }
 
-Battle.prototype.end_turn = function() {
-    this.turn = (this.turn + 1) % this.players.length
-    if (this.turn == 0) this.end_round()
-    this.reset_timer()
+Battle.prototype.get_next = function() {
+    // calculates the needed advance for the next turn
+}
+
+Battle.prototype.end_turn = function(id) {
+    this.turn = this.get_next()
+    this.round_progress |= 1 << id
+    if (this.round_progress == (1 << this.players.count) - 1)
+        this.end_round()
 }
 
 Battle.prototype.end_round = function() {
-    this.players.forEach(function(p) { p.effects_decay() })
+    this.players.forEach(function(p) { p.tick() })
 }
 
 Battle.prototype.end = function(winner) {
@@ -28,13 +32,8 @@ Battle.prototype.end = function(winner) {
     
     var loser = players[0]._id == winner._id ? players[1] : players[0]
     if (winner.set_victory(loser))
-        winner.add_message('server', 'Você avançou para o nível ' + winner.level + '.')
+        winner.tell('special', 'level_up:' + winner.level)
     loser.set_defeat(winner)
-}
-
-Battle.prototype.reset_timer = function() {
-    clearTimeout(this.turn_timer)
-    this.turn_timer = setTimeout(this.end_turn, this.turn_duration * 1000)
 }
 
 Battle.prototype.validate_turn = function(player) {

@@ -1,7 +1,7 @@
-var models = [ 
+[ 
     'clan',
     'skill',
-    'player'
+    'player',
+    'item'
 ]
-
-for (i in models) require('./' + models[i])
+.forEach(function(m) { require('./' + m) })

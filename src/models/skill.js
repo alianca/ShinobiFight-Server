@@ -35,10 +35,22 @@ var SkillSchema = new Schema({
 SkillSchema.method('get_damage', function(attacker, attacked) {
     if (this.blocked) return null;
     
-    var damage = (attacker.bonus[this.type] + attacker.bonus.str / 3) * this.strength
-    var defense = (attacked.bonus.def + attacked.bonus[this.type]) / 2
-    var success_chance = (this.precision + attacker.precision + attacker.bonus[this.type]) / 3 - attacked.dodge
-    var critical_chance = (this.critical + attacker.critical / 3) * attacker.bonus[this.type]
+    var damage = ( attacker.attributes[this.type]
+                 + attacker.attributes.str / 3 )
+                 * this.strength
+                 
+    var defense = ( attacked.attributes.def
+                  + attacked.attributes[this.type] ) / 2
+                  
+    var success_chance = ( this.precision
+                         + attacker.precision
+                         + attacker.attributes[this.type] ) / 3
+                         - attacked.dodge
+                         
+    var critical_chance = ( this.critical
+                          + attacker.critical / 3 )
+                          * attacker.attributes[this.type]
+    
     var success = success_chance > Math.random() * 100
     var critical = critical_chance > Math.random() * 100
     
@@ -50,17 +62,21 @@ SkillSchema.method('get_damage', function(attacker, attacked) {
         if (final_damage < 0) final_damage = 0
         if (critical) final_damage *= 2
         
-        attacked.status.hp -= final_damage
-        if (attacked.status.hp < 0) {
-            final_damage -= attacked.status.hp
-            attacked.status.hp = 0
+        attacked.set('hp', attacked.attributes.hp - final_damage)
+        if (attacked.attributes.hp < 0) {
+            final_damage -= attacked.attributes.hp
+            attacked.set('hp', 0)
         }
     }
     
     this.blocked = true
     setTimeout(function() { this.blocked = false }, this.fatigue * 1000)
     
-    return { damage: final_damage, success: success, critical: critical }
+    return {
+        damage: final_damage,
+        success: success,
+        critical: critical
+    }
 })
 
 SkillSchema.method('set_effects', function(attacker, attacked) {
@@ -69,7 +85,7 @@ SkillSchema.method('set_effects', function(attacker, attacked) {
         bonus: this.bonus
     })
     
-    for (var type in this.cost) attacker.status[type] -= cost
+    for (var type in this.cost) attacker.attributes[type] -= cost
     
     attacked.status.effects.push({
         duration: this.duration,

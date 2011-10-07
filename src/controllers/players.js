@@ -8,17 +8,15 @@ exports.controller = {
         console.log(params)
         var player = sessions.get(params.player_id)
         if (!player) return respond({ status: 'error', reason: 'invalid_player' })
-        var data = {
+        respond({ status: 'ok', response: {
             name: player.name,
-            clan: player.clan,
-            level: player.level,
             experience: player.experience,
-            attributes: player.attributes
-        }
-        player.get_skills(function(skills) {
-            data.skills = skills
-            respond({ status: 'ok', response: data })
-        })
+            level: player.level,
+            clan: player.clan,
+            attributes: player.attributes,
+            skills: player.skills,
+            effects: player.effects
+        } })
     },
     
     create: function(params, respond) {
